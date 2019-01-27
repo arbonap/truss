@@ -39,5 +39,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.17"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "active_support"
+  spec.add_development_dependency "activesupport"
+  spec.add_development_dependency "byebug"
+  spec.add_development_dependency "artii"
+  spec.add_development_dependency "thor", "0.20.0"
 end
