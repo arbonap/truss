@@ -43,4 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "byebug"
   spec.add_development_dependency "artii"
   spec.add_development_dependency "thor", "0.20.0"
+
 end

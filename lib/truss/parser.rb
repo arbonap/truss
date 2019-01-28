@@ -1,5 +1,8 @@
 # encoding: UTF-8
 require 'csv'
+require "active_support/all"
+require 'active_support/time_with_zone'
+
 module Parser
   def self.welcome
     # the artii gem creates ascii text
@@ -9,8 +12,10 @@ module Parser
   def self.import
     output =
     csv = CSV.foreach("sample.csv", headers: true, :encoding => 'utf-8') do |row|
-      formatted_datetime = DateTime.strptime(row[0], '%m/%d/%y %l:%M:%S %p').iso8601
-      row[0] = formatted_datetime
+      Time.zone = 'Pacific Time (US & Canada)'
+      formatted_datetime = DateTime.strptime(row[0], '%m/%d/%y %l:%M:%S %p').in_time_zone('Pacific Time (US & Canada)')
+      formatted_datetime_est = formatted_datetime.in_time_zone('Eastern Time (US & Canada)').iso8601
+      row[0] = formatted_datetime_est
       puts row.inspect
     end
   end
