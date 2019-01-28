@@ -3,7 +3,7 @@ require_relative "parser"
   class Cli
     extend Parser
     puts Parser.welcome
+    byebug
     puts 'hi!'
-    Parser.input_csv
-
+    # import = Parser.import
   end
