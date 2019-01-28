@@ -7,9 +7,10 @@ module Parser
     `artii Truss Parser`
   end
   def self.import
+    output =
     csv = CSV.foreach("sample.csv", headers: true, :encoding => 'utf-8') do |row|
-      # formatted_datetime = DateTime.parse(row[0]).iso8601
-      # row[0] = formatted_datetime
+      formatted_datetime = DateTime.strptime(row[0], '%m/%d/%y %l:%M:%S %p').iso8601
+      row[0] = formatted_datetime
       puts row.inspect
     end
   end

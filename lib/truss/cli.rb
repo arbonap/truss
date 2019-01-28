@@ -5,5 +5,5 @@ require_relative "parser"
     puts Parser.welcome
     byebug
     puts 'hi!'
-    # import = Parser.import
+    import = Parser.import
   end
