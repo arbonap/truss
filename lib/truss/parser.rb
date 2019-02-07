@@ -21,6 +21,10 @@ module Parser
       formatted_datetime = DateTime.strptime(row['Timestamp'], '%m/%d/%y %l:%M:%S %p').in_time_zone('Pacific Time (US & Canada)')
       formatted_datetime_est = formatted_datetime.in_time_zone('Eastern Time (US & Canada)').iso8601
       row['Timestamp'] = formatted_datetime_est
+
+       until row['ZIP'].length == 5 do
+         row['ZIP'].prepend('0')
+       end
       puts row.inspect
     end
   end
