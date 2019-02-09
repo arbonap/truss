@@ -10,21 +10,64 @@ module Parser
   end
 
   def self.import
+    # read in CSV with broken unicode
+    # and scrub the broken bytes
     cleaned_arrays = CSV.parse(File.read("sample-with-broken-utf8.csv").scrub)
-
-    CSV.open("scrubbed-sample.csv", "a+") do |csv|
+    # generate a new CSV without broken unicode
+    CSV.open("scrubbed-sample.csv", "w+") do |csv|
       cleaned_arrays.map { |ary| csv << ary }
     end
 
-    csv = CSV.foreach("scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row|
-      Time.zone = 'Pacific Time (US & Canada)'
-      formatted_datetime = DateTime.strptime(row['Timestamp'], '%m/%d/%y %l:%M:%S %p').in_time_zone('Pacific Time (US & Canada)')
-      formatted_datetime_est = formatted_datetime.in_time_zone('Eastern Time (US & Canada)').iso8601
-      row['Timestamp'] = formatted_datetime_est
+    table = CSV.table("scrubbed-sample.csv")
+    table.each_with_index do |row, i|
+      begin
+        Time.strptime(row[:fooduration], '%H:%M:%S.%L').seconds_since_midnight.to_f
+      rescue ArgumentError => e
+        STDERR.puts "Warning: #{row} will be deleted due to an unparseable 'FooDuration'"
+      end
+      table.by_row![i].delete_if { |_| e.present? }
+    end
 
-       until row['ZIP'].length == 5 do
-         row['ZIP'].prepend('0')
+    output = table.to_a.reject! { |row| row.blank? }
+    puts "table result: #{table}"
+    puts output
+
+    CSV.open("super-scrubbed-sample.csv", "w+") do |csv|
+      output.map { |ary| csv << ary }
+    end
+
+    csv = CSV.foreach("super-scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row|
+      # convert PST to EST
+      # format timestamps in iso8601
+      Time.zone = 'Pacific Time (US & Canada)'
+      formatted_datetime = DateTime.strptime(row['timestamp'], '%m/%d/%y %l:%M:%S %p').in_time_zone('Pacific Time (US & Canada)')
+      formatted_datetime_est = formatted_datetime.in_time_zone('Eastern Time (US & Canada)').iso8601
+      row['timestamp'] = formatted_datetime_est
+
+      # any zip codes with less than 5 digits,
+      # prepend 0's to them until they are 5 digits long
+       until row['zip'].length == 5 do
+         row['zip'].prepend('0')
        end
+       # uppercase all names
+       row['fullname'].upcase!
+
+       # pass address column as is, validate everything is valid unicode
+       # else, replace with Unicode Replacement Character
+      #row['Address'].force_encoding('UTF-8').encode('UTF-16', :invalid => :replace, :replace => '�').encode('UTF-8')
+
+       row['address'].encode('UTF-16', :invalid => :replace, :replace => '�').encode('UTF-8')
+       Time.strptime(row['fooduration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
+       #
+      #  begin
+      #    Time.parse(row['BarDuration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
+      #  rescue
+      #   #  row.delete(['BarDuration'])
+      #    STDERR.puts "Warning: #{row} has been deleted due to an unparseable 'BarDuration' of #{row['BarDuration']}"
+      #  end
+
+
+
       puts row.inspect
     end
   end
