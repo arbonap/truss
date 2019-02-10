@@ -22,8 +22,9 @@ module Parser
     table.each_with_index do |row, i|
       begin
         Time.strptime(row[:fooduration], '%H:%M:%S.%L').seconds_since_midnight.to_f
+        Time.strptime(row[:barduration], '%H:%M:%S.%L').seconds_since_midnight.to_f
       rescue ArgumentError => e
-        STDERR.puts "Warning: #{row} will be deleted due to an unparseable 'FooDuration'"
+        STDERR.puts "Warning: #{row} will be deleted due to an unparseable Time"
       end
       table.by_row![i].delete_if { |_| e.present? }
     end
@@ -36,7 +37,7 @@ module Parser
       output.map { |ary| csv << ary }
     end
 
-    csv = CSV.foreach("super-scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row|
+    csv = CSV.foreach("super-scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row, i|
       # convert PST to EST
       # format timestamps in iso8601
       Time.zone = 'Pacific Time (US & Canada)'
@@ -57,16 +58,19 @@ module Parser
       #row['Address'].force_encoding('UTF-8').encode('UTF-16', :invalid => :replace, :replace => '�').encode('UTF-8')
 
        row['address'].encode('UTF-16', :invalid => :replace, :replace => '�').encode('UTF-8')
-       Time.strptime(row['fooduration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
-       #
-      #  begin
-      #    Time.parse(row['BarDuration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
-      #  rescue
-      #   #  row.delete(['BarDuration'])
-      #    STDERR.puts "Warning: #{row} has been deleted due to an unparseable 'BarDuration' of #{row['BarDuration']}"
-      #  end
 
+       foo_duration_seconds = Time.strptime(row['fooduration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
+       row['fooduration'] = foo_duration_seconds
 
+       bar_duration_seconds = Time.strptime(row['barduration'], '%H:%M:%S.%L').seconds_since_midnight.to_f
+       row['barduration'] = bar_duration_seconds
+
+       row['totalduration'] = foo_duration_seconds + bar_duration_seconds
+
+       row['address'] = '' if row['address'].nil?
+       row['notes'] = '' if row['notes'].nil?
+
+       row['notes'].encode('UTF-16', :undef => :replace, :invalid => :replace, :replace => '�').encode('UTF-8')
 
       puts row.inspect
     end
