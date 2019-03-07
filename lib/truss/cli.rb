@@ -4,6 +4,6 @@ require_relative "parser"
     extend Parser
     puts Parser.welcome
     puts 'hi!'
+    Parser.truncate if File.open('normalized_data.csv', "a+").present?
     Parser.import
-    Parser.truncate
   end
