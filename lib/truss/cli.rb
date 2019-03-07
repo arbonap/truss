@@ -4,5 +4,6 @@ require_relative "parser"
     extend Parser
     puts Parser.welcome
     puts 'hi!'
-    import = Parser.import
+    Parser.import
+    Parser.truncate
   end

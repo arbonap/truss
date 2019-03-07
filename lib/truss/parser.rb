@@ -21,23 +21,27 @@ module Parser
     table = CSV.table("scrubbed-sample.csv")
     table.each_with_index do |row, i|
       begin
+        # Time.zone = 'Pacific Time (US & Canada)'
+        # formatted_datetime = DateTime.strptime(row['timestamp'], '%m/%d/%y %l:%M:%S %p').in_time_zone('Pacific Time (US & Canada)')
         Time.strptime(row[:fooduration], '%H:%M:%S.%L').seconds_since_midnight.to_f
         Time.strptime(row[:barduration], '%H:%M:%S.%L').seconds_since_midnight.to_f
       rescue ArgumentError => e
-        STDERR.puts "Warning: #{row} will be deleted due to an unparseable Time"
+        STDERR.puts "Warning: Row #{i} will be deleted due to an unparseable Time.
+                    The following row of data will be dropped:
+                    '#{row}' "
       end
       table.by_row![i].delete_if { |_| e.present? }
     end
 
     output = table.to_a.reject! { |row| row.blank? }
-    puts "table result: #{table}"
-    puts output
 
-    CSV.open("super-scrubbed-sample.csv", "w+") do |csv|
+    CSV.open("scrubbed-sample.csv", "w+") do |csv|
       output.map { |ary| csv << ary }
     end
 
-    csv = CSV.foreach("super-scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row, i|
+    table = CSV.table("scrubbed-sample.csv")
+
+    CSV.foreach("scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row|
       # convert PST to EST
       # format timestamps in iso8601
       Time.zone = 'Pacific Time (US & Canada)'
@@ -72,7 +76,14 @@ module Parser
 
        row['notes'].encode('UTF-16', :undef => :replace, :invalid => :replace, :replace => '�').encode('UTF-8')
 
-      puts row.inspect
+      CSV.open('test.csv', 'a') do |csv|
+        csv << row.fields
+      end
     end
+    File.open('test.csv').map { |r| puts r}
+  end
+
+  def self.truncate
+    File.truncate('test.csv', 0)
   end
 end
