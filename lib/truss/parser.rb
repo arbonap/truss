@@ -8,12 +8,10 @@ module Parser
     # this method shells it out
     `artii Truss Parser`
   end
-#   if ARGV.length != 1
-#   puts "We need exactly two arguments"
-#   exit
-# end
 
-  def self.import
+  def self.scrub
+    # make sure there is only one argument from STDIN
+    self.validate_args
     # read in CSV with broken unicode from STDIN
     # and scrub the broken bytes
     cleaned_arrays = self.cleaned_file
@@ -21,18 +19,20 @@ module Parser
     self.generate_scrubbed_csv(cleaned_arrays)
 
     table = CSV.table("scrubbed-sample.csv")
+
+    # drop rows with unparseable DateTimes
     self.drop_unparseable_time(table)
 
     output = table.to_a.reject! { |row| row.blank? }
     self.generate_scrubbed_csv(output)
+  end
 
+  def self.normalize
     CSV.foreach("scrubbed-sample.csv", headers: true, encoding: "utf-8") do |row|
-      # convert PST to EST
-      # format timestamps in iso8601
+      # convert PST to EST && format timestamps in iso8601
       self.update_timezone(row, 'Pacific Time (US & Canada)', 'Eastern Time (US & Canada)')
 
-      # any zip codes with less than 5 digits,
-      # prepend 0's to them until they are 5 digits long
+      # any zip codes with less than 5 digits, prepend 0's to them until they are 5 digits long
        self.validate_zipcode(row['zip'])
        # uppercase all names
        self.upcase_fullname(row['fullname'])
@@ -62,6 +62,13 @@ module Parser
   def self.generate_scrubbed_csv(arrays)
     CSV.open("scrubbed-sample.csv", "w+") do |csv|
       arrays.map { |ary| csv << ary }
+    end
+  end
+
+  def self.validate_args
+    if ARGV.length != 1
+      STDERR.puts "Warning: We need exactly one argument. Please try again with one command-line argument."
+      exit
     end
   end
 

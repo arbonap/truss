@@ -9,5 +9,6 @@ require_relative "parser"
           A warning will be piped to `stderr` if there is any unparseable data,
           and its correspnding row will be dropped from your output.'
     Parser.truncate if File.open('normalized_data.csv', "a+").present?
-    Parser.import
+    Parser.scrub
+    Parser.normalize
   end
