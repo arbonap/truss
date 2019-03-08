@@ -44,7 +44,7 @@ module Parser
        foo_duration_seconds = self.calculate_duration(row['fooduration'])
        bar_duration_seconds = self.calculate_duration(row['barduration'])
 
-       row['totalduration'] = foo_duration_seconds + bar_duration_seconds
+      self.calculate_total_duration(row, foo_duration_seconds, bar_duration_seconds)
 
       self.unicode_notes_validation(row['notes'])
 
@@ -98,6 +98,10 @@ module Parser
 
   def self.format_datetime(timestamp)
     timestamp.iso8601
+  end
+
+  def self.calculate_total_duration(row, foo_duration_seconds, bar_duration_seconds)
+    row['totalduration'] = foo_duration_seconds + bar_duration_seconds
   end
 
   def self.calculate_duration(row)
